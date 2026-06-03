@@ -7,6 +7,14 @@ description: Use when the user asks to ingest daily voice notes, meeting recordi
 
 This is a privacy-safe, configurable workflow for turning daily voice notes or meeting recordings into a personal knowledge base. Keep this skill public; put personal names, company names, project paths, API tokens, and task tracker IDs in local config files that are ignored by git.
 
+## Operating Contract
+
+- Use only public files in this package as instructions.
+- Load private values only from local config files.
+- Treat all writes as append-only unless the user explicitly asks for a targeted correction.
+- Convert relative dates to absolute `YYYY-MM-DD` before reading or writing files.
+- Keep the workflow runtime-neutral: use the user's available shell, CLI, API client, MCP, or exported files; do not require a specific agent runtime.
+
 ## Required Local Config
 
 Before running, load:
@@ -14,7 +22,9 @@ Before running, load:
 1. `config.local.yaml` if present, otherwise use `config.example.yaml` as a schema reference.
 2. The glossary file from `glossary_path` in config.
 
-Never commit local config, real glossaries, API keys, organization names, customer names, task tracker tokens, or private directory maps.
+If `config.local.yaml` is missing, STOP before writing and ask the user for either a config file path or permission to run in dry-run mode from `config.example.yaml`.
+
+Never commit local config, real glossaries, API keys, organization names, customer names, task tracker tokens, private directory maps, or raw transcript exports.
 
 ## Inputs
 
@@ -39,6 +49,15 @@ Never commit local config, real glossaries, API keys, organization names, custom
 - Filter to recording-like notes (`audio`, `voice`, `meeting`, `recorder`, or config-defined types).
 - Report the note count and titles before writing.
 
+Failure handling:
+
+| If this happens | Do this |
+|---|---|
+| Source command/API fails | Try `fallback_command` if configured; otherwise ask for an exported file path. |
+| Source returns more than one day | Filter by `date_field` and report the filtered count. |
+| Source lacks required fields | Map fields using config; if still missing title/content/id/date, STOP and report the missing fields. |
+| No notes found | Report zero notes and do not create empty project notes. |
+
 ### 2. Apply Speech-Recognition Corrections
 
 Apply glossary corrections to note titles, AI summaries, transcripts, and TODO text:
@@ -48,6 +67,10 @@ Apply glossary corrections to note titles, AI summaries, transcripts, and TODO t
 - `domain_terms`: canonical vocabulary to preserve.
 
 If a new correction is obvious but not in the glossary, list it for user confirmation. Do not silently add unconfirmed corrections to the glossary.
+
+🔴 CHECKPOINT - New Glossary Entries
+
+When a correction is not already in the glossary, do not add it during the ingest run. Show `wrong -> correct`, the source note title, and one short context snippet. Add it only after the user confirms.
 
 ### 3. Append Daily Log
 
@@ -94,6 +117,15 @@ Avoid:
 - Avoid duplicate entries by searching for note IDs before writing.
 - Preserve existing frontmatter and headings.
 
+Failure handling:
+
+| If this happens | Do this |
+|---|---|
+| Daily log file does not exist | Create it from `daily_log_template`; if no template exists, create minimal frontmatter plus title. |
+| Recording section is missing | Append the configured section heading at the end of the file, then append entries below it. |
+| Note ID already exists in the log | Skip that note and mention it in the final report. |
+| Existing file has malformed frontmatter | Do not rewrite frontmatter; append below the body and report the issue. |
+
 ### 4. Route Project Notes
 
 Use `routing_rules` from config. Each rule should define:
@@ -105,6 +137,8 @@ Use `routing_rules` from config. Each rule should define:
 - optional `template`
 
 Create project notes only when the recording contains reusable project context, meeting minutes, a decision record, or a draft-worthy insight.
+
+If multiple routing rules match, choose the most specific rule by keyword overlap. If the top two rules are tied, STOP and ask the user to choose a destination before writing the project note.
 
 Default project note frontmatter:
 
@@ -148,6 +182,19 @@ Never modify tasks owned by other people unless the user explicitly asks.
 
 If tracker access fails, write a short note in the daily log or final report; do not block local ingestion.
 
+🔴 CHECKPOINT - Status Changes And New Tasks
+
+Append progress to an existing primary-user task when the match is clear. Before marking a task done, creating a task, changing an owner, or changing a due date, list the proposed change and wait for user confirmation.
+
+Failure handling:
+
+| If this happens | Do this |
+|---|---|
+| Tracker config is incomplete | Skip tracker sync and report missing config keys. |
+| Tracker read fails | Continue local ingest; include failure reason in final report. |
+| Multiple tasks match one note | Append only if one task is clearly best; otherwise list candidates for user choice. |
+| A note implies someone else's task | Do not update it unless the user explicitly requested cross-owner updates. |
+
 ### 6. Extract Primary-User TODOs
 
 Scan note TODO sections and transcripts for commitments. Keep only TODOs where `primary_user` is the owner or decision-maker.
@@ -163,6 +210,30 @@ Format:
 ```markdown
 - [ ] Task text (source: note title, due: date or TBD)
 ```
+
+🔴 CHECKPOINT - Ambiguous Ownership
+
+If a TODO does not clearly belong to `primary_user`, do not add it to the primary-user TODO list. Put it in the final report under "possible delegated TODOs" instead.
+
+## Do Not Do These
+
+- Do not publish or print API keys, tokens, customer names, raw transcripts, or private config values.
+- Do not replace the whole daily log file.
+- Do not create project notes for every recording by default; route only reusable material.
+- Do not infer completed tasks without explicit evidence.
+- Do not silently add new glossary corrections.
+- Do not write tasks for other owners unless the user explicitly asks.
+- Do not depend on one specific runtime, IDE, plugin, or hosted service.
+
+## Validation Checklist
+
+Before the final report:
+
+- Search the daily log for every processed `note_id`.
+- Check that new project files exist and have frontmatter.
+- Confirm no local-only config files were modified unless the user approved it.
+- If preparing a public package, scan for private names, tokens, absolute local paths, and raw transcript content.
+- Report skipped notes, duplicate note IDs, tracker failures, and pending confirmations.
 
 ## Final Report
 
@@ -193,4 +264,3 @@ Do not publish:
 - API keys, task tracker tokens, real workspace IDs
 - Real company, employee, customer, store, or partner mapping files
 - Raw recording transcripts unless explicitly sanitized
-
