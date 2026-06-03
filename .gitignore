@@ -1,0 +1,8 @@
+config.local.yaml
+glossary.local.yaml
+*.local.yaml
+*_private.yaml
+.env
+raw/
+exports/
+transcripts/

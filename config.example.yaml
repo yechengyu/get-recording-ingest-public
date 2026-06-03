@@ -1,0 +1,67 @@
+# Example configuration for get-recording-ingest-public.
+# Copy to config.local.yaml and replace placeholders with private values.
+
+primary_user:
+  display_name: "Primary User"
+  aliases:
+    - "Me"
+    - "Founder"
+
+timezone: "Asia/Shanghai"
+vault_root: "/absolute/path/to/your/knowledge-base"
+daily_log_dir: "logs"
+daily_log_template: |
+  ---
+  type: daily-log
+  date: {{date}}
+  tags: [log]
+  ---
+
+  # {{date}}
+
+recording_section: "## Appendix - Recording Notes"
+todo_section: "## TODOs From Recordings"
+
+recording_source:
+  type: "cli"
+  command: "your-notes-cli notes --output json"
+  fallback_command: ""
+  date_field: "created_at"
+  title_field: "title"
+  content_field: "content"
+  id_field: "id"
+  note_type_field: "note_type"
+  recording_note_types:
+    - "recorder_audio"
+    - "audio"
+    - "voice"
+
+glossary_path: "glossary.local.yaml"
+
+routing_rules:
+  - name: "Marketing and content"
+    keywords: ["marketing", "content", "video", "social media"]
+    target_dir: "projects/marketing/meetings"
+    note_type: "meeting-minutes"
+
+  - name: "Sales and partnerships"
+    keywords: ["sales", "partnership", "customer", "proposal"]
+    target_dir: "projects/sales"
+    note_type: "meeting-minutes"
+
+  - name: "Personal insights"
+    keywords: ["reflection", "idea", "essay", "insight"]
+    target_dir: "content/drafts"
+    note_type: "draft"
+
+task_tracker:
+  enabled: false
+  type: "none"
+  owner_name: "Primary User"
+  open_statuses: ["todo", "in progress", "blocked"]
+  done_statuses: ["done", "completed"]
+  progress_field: "Progress"
+  title_field: "Title"
+  owner_field: "Owner"
+  status_field: "Status"
+

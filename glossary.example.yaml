@@ -1,0 +1,19 @@
+# Example glossary for speech-recognition corrections.
+# Copy to glossary.local.yaml and replace placeholders with private vocabulary.
+
+people:
+  "nickname_or_misheard_name": "Canonical Person Name"
+  "team_member_a": "Team Member A"
+
+corrections:
+  "misheard company": "Canonical Company"
+  "misheard product": "Canonical Product"
+  "PDC": "PDCA"
+  "to do": "TODO"
+
+domain_terms:
+  - "Canonical Company"
+  - "Canonical Product"
+  - "PDCA"
+  - "task tracker"
+
