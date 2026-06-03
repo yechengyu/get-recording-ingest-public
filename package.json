@@ -1,0 +1,32 @@
+{
+  "name": "get-recording-ingest-public",
+  "version": "0.1.0",
+  "description": "A privacy-safe Agent Skill for ingesting daily recording notes into a personal knowledge base.",
+  "type": "module",
+  "bin": {
+    "install-recording-ingest-skill": "./bin/install.mjs"
+  },
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "README.zh-CN.md",
+    "config.example.yaml",
+    "glossary.example.yaml",
+    ".gitignore",
+    "bin/install.mjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yechengyu/get-recording-ingest-public.git"
+  },
+  "keywords": [
+    "agent-skill",
+    "voice-notes",
+    "knowledge-base",
+    "recording-notes"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
+

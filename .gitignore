@@ -6,3 +6,5 @@ glossary.local.yaml
 raw/
 exports/
 transcripts/
+node_modules/
+package-lock.json
