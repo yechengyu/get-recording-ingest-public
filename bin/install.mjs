@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,11 +28,34 @@ const files = [
   "README.zh-CN.md",
   "config.example.yaml",
   "glossary.example.yaml",
-  ".gitignore",
 ];
 
 for (const file of files) {
   copyFileSync(join(root, file), join(target, file));
+}
+
+const gitignore = join(root, ".gitignore");
+const targetGitignore = join(target, ".gitignore");
+if (existsSync(gitignore)) {
+  copyFileSync(gitignore, targetGitignore);
+} else {
+  writeFileSync(
+    targetGitignore,
+    [
+      "config.local.yaml",
+      "glossary.local.yaml",
+      "*.local.yaml",
+      "*_private.yaml",
+      ".env",
+      "raw/",
+      "exports/",
+      "transcripts/",
+      "node_modules/",
+      "package-lock.json",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
 }
 
 const localConfig = join(target, "config.local.yaml");
